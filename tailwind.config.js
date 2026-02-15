@@ -14,6 +14,10 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                primary: '#8B0000', // Dark Red
+                secondary: '#FFD700', // Gold Accent
+            },
         },
     },
 
