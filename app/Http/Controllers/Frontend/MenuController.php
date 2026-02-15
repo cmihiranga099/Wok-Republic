@@ -7,5 +7,13 @@ use Illuminate\Http\Request;
 
 class MenuController extends Controller
 {
-    //
+    public function index()
+    {
+        return view('frontend.menu.index');
+    }
+
+    public function show($slug)
+    {
+        return view('frontend.menu.show', ['slug' => $slug]);
+    }
 }
