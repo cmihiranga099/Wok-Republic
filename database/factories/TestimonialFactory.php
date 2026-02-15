@@ -17,7 +17,11 @@ class TestimonialFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'customer_name' => fake()->name(),
+            'testimonial_text' => fake()->paragraph(),
+            'rating' => fake()->boolean(70) ? fake()->numberBetween(1, 5) : null,
+            'avatar' => fake()->boolean(50) ? fake()->imageUrl(640, 480, 'people', true) : null,
+            'status' => fake()->boolean(80), // 80% chance of being approved
         ];
     }
 }
