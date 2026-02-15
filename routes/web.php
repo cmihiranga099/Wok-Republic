@@ -60,3 +60,8 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Admin Routes
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    require base_path('routes/admin.php');
+});
