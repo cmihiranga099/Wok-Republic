@@ -2,7 +2,7 @@
     {{-- Hero Section --}}
     <div class="relative bg-gray-900 overflow-hidden">
         <div class="absolute inset-0">
-            <img class="w-full h-full object-cover" src="https://via.placeholder.com/1920x1080/000000/000000?text=+" alt="Wok Republic Restaurant">
+            <img class="w-full h-full object-cover" src="https://via.placeholder.com/1920x1080/000000/000000?text=+" alt="Chinese Dragon Cafe Restaurant">
             <div class="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/80 to-gray-900/40"></div>
         </div>
         <div class="relative max-w-7xl mx-auto py-32 px-4 sm:py-40 sm:px-6 lg:px-8 text-center">
@@ -59,7 +59,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
                 <h2 class="text-3xl font-extrabold text-white sm:text-4xl font-serif">Why Choose Us</h2>
-                <p class="mt-4 text-lg text-gray-400">What makes Wok Republic special.</p>
+                <p class="mt-4 text-lg text-gray-400">What makes Chinese Dragon Cafe special.</p>
             </div>
             <div class="grid gap-8 md:grid-cols-3">
                 <div class="bg-gray-800 rounded-lg p-8 text-center hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">

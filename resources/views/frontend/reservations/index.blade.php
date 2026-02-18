@@ -3,7 +3,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
                 <h1 class="text-4xl font-extrabold text-white font-serif">Reserve a Table</h1>
-                <p class="mt-4 text-lg text-gray-400">Book your dining experience at Wok Republic</p>
+                <p class="mt-4 text-lg text-gray-400">Book your dining experience at Chinese Dragon Cafe</p>
             </div>
 
             <div class="lg:flex lg:gap-12">

@@ -3,68 +3,49 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Reservation;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 
 class ReservationController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): View
+    public function index(Request $request)
     {
-        return view('admin.reservations.index');
+        $reservations = Reservation::when($request->search, fn($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%"))
+            ->when($request->status, fn($q, $s) => $q->where('status', $s))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.reservations.index', compact('reservations'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
+    public function show(Reservation $reservation)
     {
-        return view('admin.reservations.create');
+        return view('admin.reservations.show', compact('reservation'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
+    public function update(Request $request, Reservation $reservation)
     {
-        // Logic to store reservation
-        return redirect()->route('admin.reservations.index')->with('success', 'Reservation created successfully.');
+        $request->validate([
+            'status' => 'required|in:pending,approved,declined',
+            'table_number' => 'nullable|string|max:20',
+        ]);
+
+        $reservation->update($request->only('status', 'table_number'));
+
+        return redirect()->route('reservations.show', $reservation)->with('success', 'Reservation updated.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): View
+    public function destroy(Reservation $reservation)
     {
-        return view('admin.reservations.show', compact('id'));
+        $reservation->delete();
+        return redirect()->route('reservations.index')->with('success', 'Reservation deleted.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id): View
+    public function create() { abort(404); }
+    public function store() { abort(404); }
+    public function edit(Reservation $reservation)
     {
-        return view('admin.reservations.edit', compact('id'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): RedirectResponse
-    {
-        // Logic to update reservation
-        return redirect()->route('admin.reservations.index')->with('success', 'Reservation updated successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): RedirectResponse
-    {
-        // Logic to delete reservation
-        return redirect()->route('admin.reservations.index')->with('success', 'Reservation deleted successfully.');
+        return view('admin.reservations.show', compact('reservation'));
     }
 }

@@ -3,7 +3,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <!-- About -->
             <div>
-                <h3 class="text-xl font-bold text-secondary font-serif mb-4">Wok Republic</h3>
+                <h3 class="text-xl font-bold text-secondary font-serif mb-4">Chinese Dragon Cafe</h3>
                 <p class="text-gray-400 text-sm leading-relaxed">
                     Authentic Asian cuisine crafted with passion. From traditional wok dishes to modern fusion, we bring the flavors of Asia to your table.
                 </p>
@@ -62,7 +62,7 @@
 
     <div class="border-t border-gray-700">
         <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-            <p class="text-center text-gray-500 text-sm">&copy; {{ date('Y') }} Wok Republic. All rights reserved.</p>
+            <p class="text-center text-gray-500 text-sm">&copy; {{ date('Y') }} Chinese Dragon Cafe. All rights reserved.</p>
         </div>
     </div>
 </footer>

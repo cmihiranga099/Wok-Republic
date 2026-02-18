@@ -3,68 +3,135 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Dish;
+use App\Models\Category;
+use App\Models\Addon;
+use App\Models\DishImage;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class DishController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): View
+    public function index(Request $request)
     {
-        return view('admin.dishes.index');
+        $dishes = Dish::with('category')
+            ->when($request->search, fn($q, $s) => $q->where('name', 'like', "%{$s}%"))
+            ->when($request->category, fn($q, $c) => $q->where('category_id', $c))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $categories = Category::orderBy('name')->get();
+
+        return view('admin.dishes.index', compact('dishes', 'categories'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
+    public function create()
     {
-        return view('admin.dishes.create');
+        $categories = Category::where('status', true)->orderBy('name')->get();
+        $addons = Addon::where('status', true)->orderBy('name')->get();
+        return view('admin.dishes.create', compact('categories', 'addons'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        // Logic to store dish
-        return redirect()->route('admin.dishes.index')->with('success', 'Dish created successfully.');
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'discount_price' => 'nullable|numeric|min:0|lt:price',
+            'ingredients' => 'nullable|string',
+            'allergens' => 'nullable|string',
+            'veg_non_veg' => 'required|in:veg,non-veg,egg',
+            'spicy_level' => 'required|integer|min:0|max:3',
+            'status' => 'boolean',
+            'addons' => 'nullable|array',
+            'addons.*' => 'exists:addons,id',
+            'images' => 'nullable|array',
+            'images.*' => 'image|max:2048',
+        ]);
+
+        $data['slug'] = Str::slug($data['name']) . '-' . Str::random(4);
+        $data['status'] = $request->has('status');
+
+        $dish = Dish::create($data);
+
+        if ($request->has('addons')) {
+            $dish->addons()->attach($request->addons);
+        }
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $i => $image) {
+                DishImage::create([
+                    'dish_id' => $dish->id,
+                    'image_path' => $image->store('dishes', 'public'),
+                    'is_thumbnail' => $i === 0,
+                ]);
+            }
+        }
+
+        return redirect()->route('dishes.index')->with('success', 'Dish created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): View
+    public function show(Dish $dish)
     {
-        return view('admin.dishes.show', compact('id'));
+        $dish->load(['category', 'addons', 'images', 'reviews.user']);
+        return view('admin.dishes.show', compact('dish'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id): View
+    public function edit(Dish $dish)
     {
-        return view('admin.dishes.edit', compact('id'));
+        $categories = Category::where('status', true)->orderBy('name')->get();
+        $addons = Addon::where('status', true)->orderBy('name')->get();
+        $dish->load(['addons', 'images']);
+        return view('admin.dishes.edit', compact('dish', 'categories', 'addons'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(Request $request, Dish $dish)
     {
-        // Logic to update dish
-        return redirect()->route('admin.dishes.index')->with('success', 'Dish updated successfully.');
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'discount_price' => 'nullable|numeric|min:0|lt:price',
+            'ingredients' => 'nullable|string',
+            'allergens' => 'nullable|string',
+            'veg_non_veg' => 'required|in:veg,non-veg,egg',
+            'spicy_level' => 'required|integer|min:0|max:3',
+            'status' => 'boolean',
+            'addons' => 'nullable|array',
+            'addons.*' => 'exists:addons,id',
+            'images' => 'nullable|array',
+            'images.*' => 'image|max:2048',
+        ]);
+
+        $data['status'] = $request->has('status');
+        $dish->update($data);
+        $dish->addons()->sync($request->addons ?? []);
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                DishImage::create([
+                    'dish_id' => $dish->id,
+                    'image_path' => $image->store('dishes', 'public'),
+                    'is_thumbnail' => false,
+                ]);
+            }
+        }
+
+        return redirect()->route('dishes.index')->with('success', 'Dish updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Dish $dish)
     {
-        // Logic to delete dish
-        return redirect()->route('admin.dishes.index')->with('success', 'Dish deleted successfully.');
+        foreach ($dish->images as $image) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+        $dish->delete();
+
+        return redirect()->route('dishes.index')->with('success', 'Dish deleted successfully.');
     }
 }

@@ -11,7 +11,7 @@
             <div class="flex">
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('home') }}">
-                        <h1 class="text-2xl font-bold text-secondary font-serif">Wok Republic</h1>
+                        <h1 class="text-2xl font-bold text-secondary font-serif">Chinese Dragon Cafe</h1>
                     </a>
                 </div>
 

@@ -3,68 +3,63 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\DishImage;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
 
 class GalleryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): View
+    public function index()
     {
-        return view('admin.gallery.index');
+        $images = DishImage::with('dish')->latest()->paginate(20);
+        return view('admin.gallery.index', compact('images'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
+    public function create()
     {
         return view('admin.gallery.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        // Logic to store image
-        return redirect()->route('admin.gallery.index')->with('success', 'Image uploaded successfully.');
+        $request->validate([
+            'dish_id' => 'required|exists:dishes,id',
+            'images' => 'required|array',
+            'images.*' => 'image|max:2048',
+        ]);
+
+        foreach ($request->file('images') as $image) {
+            DishImage::create([
+                'dish_id' => $request->dish_id,
+                'image_path' => $image->store('dishes', 'public'),
+                'is_thumbnail' => false,
+            ]);
+        }
+
+        return redirect()->route('gallery.index')->with('success', 'Images uploaded successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): View
+    public function show(DishImage $gallery)
     {
-        return view('admin.gallery.show', compact('id'));
+        return view('admin.gallery.show', compact('gallery'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id): View
+    public function edit(DishImage $gallery)
     {
-        return view('admin.gallery.edit', compact('id'));
+        return view('admin.gallery.edit', compact('gallery'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(Request $request, DishImage $gallery)
     {
-        // Logic to update image
-        return redirect()->route('admin.gallery.index')->with('success', 'Image updated successfully.');
+        $request->validate(['is_thumbnail' => 'boolean']);
+        $gallery->update(['is_thumbnail' => $request->has('is_thumbnail')]);
+        return redirect()->route('gallery.index')->with('success', 'Image updated.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): RedirectResponse
+    public function destroy(DishImage $gallery)
     {
-        // Logic to delete image
-        return redirect()->route('admin.gallery.index')->with('success', 'Image deleted successfully.');
+        Storage::disk('public')->delete($gallery->image_path);
+        $gallery->delete();
+        return redirect()->route('gallery.index')->with('success', 'Image deleted.');
     }
 }

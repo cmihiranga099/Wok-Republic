@@ -3,68 +3,89 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Offer;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 
 class OfferController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): View
+    public function index(Request $request)
     {
-        return view('admin.offers.index');
+        $offers = Offer::when($request->search, fn($q, $s) => $q->where('code', 'like', "%{$s}%"))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.offers.index', compact('offers'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
+    public function create()
     {
         return view('admin.offers.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        // Logic to store offer
-        return redirect()->route('admin.offers.index')->with('success', 'Offer created successfully.');
+        $request->validate([
+            'code' => 'required|string|max:50|unique:offers',
+            'type' => 'required|in:percent,fixed',
+            'value' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+            'min_order' => 'nullable|numeric|min:0',
+            'expiry_date' => 'required|date|after:now',
+            'status' => 'boolean',
+        ]);
+
+        Offer::create([
+            'code' => strtoupper($request->code),
+            'type' => $request->type,
+            'value' => $request->value,
+            'description' => $request->description,
+            'min_order' => $request->min_order,
+            'expiry_date' => $request->expiry_date,
+            'status' => $request->has('status'),
+        ]);
+
+        return redirect()->route('offers.index')->with('success', 'Offer created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): View
+    public function show(Offer $offer)
     {
-        return view('admin.offers.show', compact('id'));
+        return view('admin.offers.show', compact('offer'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id): View
+    public function edit(Offer $offer)
     {
-        return view('admin.offers.edit', compact('id'));
+        return view('admin.offers.edit', compact('offer'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(Request $request, Offer $offer)
     {
-        // Logic to update offer
-        return redirect()->route('admin.offers.index')->with('success', 'Offer updated successfully.');
+        $request->validate([
+            'code' => 'required|string|max:50|unique:offers,code,' . $offer->id,
+            'type' => 'required|in:percent,fixed',
+            'value' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+            'min_order' => 'nullable|numeric|min:0',
+            'expiry_date' => 'required|date|after:now',
+            'status' => 'boolean',
+        ]);
+
+        $offer->update([
+            'code' => strtoupper($request->code),
+            'type' => $request->type,
+            'value' => $request->value,
+            'description' => $request->description,
+            'min_order' => $request->min_order,
+            'expiry_date' => $request->expiry_date,
+            'status' => $request->has('status'),
+        ]);
+
+        return redirect()->route('offers.index')->with('success', 'Offer updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Offer $offer)
     {
-        // Logic to delete offer
-        return redirect()->route('admin.offers.index')->with('success', 'Offer deleted successfully.');
+        $offer->delete();
+        return redirect()->route('offers.index')->with('success', 'Offer deleted successfully.');
     }
 }

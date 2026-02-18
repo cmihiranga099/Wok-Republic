@@ -3,68 +3,93 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): View
+    public function index(Request $request)
     {
-        return view('admin.categories.index');
+        $categories = Category::when($request->search, fn($q, $s) => $q->where('name', 'like', "%{$s}%"))
+            ->orderBy('sort_order')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.categories.index', compact('categories'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
+    public function create()
     {
         return view('admin.categories.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        // Logic to store category
-        return redirect()->route('admin.categories.index')->with('success', 'Category created successfully.');
+        $data = $request->validate([
+            'name' => 'required|string|max:255|unique:categories',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
+            'sort_order' => 'nullable|integer|min:0',
+            'status' => 'boolean',
+        ]);
+
+        $data['slug'] = Str::slug($data['name']);
+        $data['status'] = $request->has('status');
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('categories', 'public');
+        }
+
+        Category::create($data);
+
+        return redirect()->route('categories.index')->with('success', 'Category created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): View
+    public function show(Category $category)
     {
-        return view('admin.categories.show', compact('id'));
+        $category->load('dishes');
+        return view('admin.categories.show', compact('category'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id): View
+    public function edit(Category $category)
     {
-        return view('admin.categories.edit', compact('id'));
+        return view('admin.categories.edit', compact('category'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(Request $request, Category $category)
     {
-        // Logic to update category
-        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully.');
+        $data = $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
+            'sort_order' => 'nullable|integer|min:0',
+            'status' => 'boolean',
+        ]);
+
+        $data['slug'] = Str::slug($data['name']);
+        $data['status'] = $request->has('status');
+
+        if ($request->hasFile('image')) {
+            if ($category->image) {
+                Storage::disk('public')->delete($category->image);
+            }
+            $data['image'] = $request->file('image')->store('categories', 'public');
+        }
+
+        $category->update($data);
+
+        return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Category $category)
     {
-        // Logic to delete category
-        return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully.');
+        if ($category->image) {
+            Storage::disk('public')->delete($category->image);
+        }
+        $category->delete();
+
+        return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
     }
 }

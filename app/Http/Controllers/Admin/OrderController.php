@@ -3,68 +3,52 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): View
+    public function index(Request $request)
     {
-        return view('admin.orders.index');
+        $orders = Order::with('user')
+            ->when($request->search, fn($q, $s) => $q->where('order_code', 'like', "%{$s}%")->orWhere('customer_name', 'like', "%{$s}%"))
+            ->when($request->status, fn($q, $s) => $q->where('order_status', $s))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.orders.index', compact('orders'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
+    public function show(Order $order)
     {
-        return view('admin.orders.create');
+        $order->load(['items.addons', 'user']);
+        return view('admin.orders.show', compact('order'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
+    public function edit(Order $order)
     {
-        // Logic to store order
-        return redirect()->route('admin.orders.index')->with('success', 'Order created successfully.');
+        return view('admin.orders.edit', compact('order'));
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): View
+    public function update(Request $request, Order $order)
     {
-        return view('admin.orders.show', compact('id'));
+        $request->validate([
+            'order_status' => 'required|in:pending,preparing,ready,out_for_delivery,delivered,cancelled',
+            'payment_status' => 'nullable|in:pending,paid,failed',
+        ]);
+
+        $order->update($request->only('order_status', 'payment_status'));
+
+        return redirect()->route('orders.show', $order)->with('success', 'Order status updated.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id): View
+    public function destroy(Order $order)
     {
-        return view('admin.orders.edit', compact('id'));
+        $order->delete();
+        return redirect()->route('orders.index')->with('success', 'Order deleted.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): RedirectResponse
-    {
-        // Logic to update order
-        return redirect()->route('admin.orders.index')->with('success', 'Order updated successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): RedirectResponse
-    {
-        // Logic to delete order
-        return redirect()->route('admin.orders.index')->with('success', 'Order deleted successfully.');
-    }
+    public function create() { abort(404); }
+    public function store() { abort(404); }
 }

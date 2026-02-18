@@ -3,68 +3,73 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Addon;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 
 class AddonController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): View
+    public function index(Request $request)
     {
-        return view('admin.addons.index');
+        $addons = Addon::when($request->search, fn($q, $s) => $q->where('name', 'like', "%{$s}%"))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.addons.index', compact('addons'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
+    public function create()
     {
         return view('admin.addons.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        // Logic to store addon
-        return redirect()->route('admin.addons.index')->with('success', 'Addon created successfully.');
+        $request->validate([
+            'name' => 'required|string|max:255|unique:addons',
+            'price' => 'required|numeric|min:0',
+            'status' => 'boolean',
+        ]);
+
+        Addon::create([
+            'name' => $request->name,
+            'price' => $request->price,
+            'status' => $request->has('status'),
+        ]);
+
+        return redirect()->route('addons.index')->with('success', 'Addon created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): View
+    public function show(Addon $addon)
     {
-        return view('admin.addons.show', compact('id'));
+        return view('admin.addons.show', compact('addon'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id): View
+    public function edit(Addon $addon)
     {
-        return view('admin.addons.edit', compact('id'));
+        return view('admin.addons.edit', compact('addon'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(Request $request, Addon $addon)
     {
-        // Logic to update addon
-        return redirect()->route('admin.addons.index')->with('success', 'Addon updated successfully.');
+        $request->validate([
+            'name' => 'required|string|max:255|unique:addons,name,' . $addon->id,
+            'price' => 'required|numeric|min:0',
+            'status' => 'boolean',
+        ]);
+
+        $addon->update([
+            'name' => $request->name,
+            'price' => $request->price,
+            'status' => $request->has('status'),
+        ]);
+
+        return redirect()->route('addons.index')->with('success', 'Addon updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Addon $addon)
     {
-        // Logic to delete addon
-        return redirect()->route('admin.addons.index')->with('success', 'Addon deleted successfully.');
+        $addon->delete();
+        return redirect()->route('addons.index')->with('success', 'Addon deleted successfully.');
     }
 }

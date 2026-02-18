@@ -26,7 +26,7 @@ class OrderFactory extends Factory
 
         return [
             'user_id' => fake()->boolean(70) ? User::factory() : null, // 70% chance of having a user
-            'order_code' => 'WR-' . fake()->unique()->randomNumber(6, true), // Wok Republic order code
+            'order_code' => 'CDC-' . date('Y') . '-' . fake()->unique()->randomNumber(6, true),
             'customer_name' => fake()->name(),
             'customer_email' => fake()->unique()->safeEmail(),
             'customer_phone' => fake()->phoneNumber(),

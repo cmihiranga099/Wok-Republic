@@ -3,68 +3,77 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Testimonial;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 
 class TestimonialController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): View
+    public function index(Request $request)
     {
-        return view('admin.testimonials.index');
+        $testimonials = Testimonial::when($request->status !== null, fn($q) => $q->where('status', $request->status))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.testimonials.index', compact('testimonials'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
+    public function create()
     {
         return view('admin.testimonials.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        // Logic to store testimonial
-        return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial created successfully.');
+        $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'testimonial_text' => 'required|string',
+            'rating' => 'nullable|integer|min:1|max:5',
+            'status' => 'boolean',
+        ]);
+
+        Testimonial::create([
+            'customer_name' => $request->customer_name,
+            'testimonial_text' => $request->testimonial_text,
+            'rating' => $request->rating,
+            'status' => $request->has('status'),
+        ]);
+
+        return redirect()->route('testimonials.index')->with('success', 'Testimonial created.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): View
+    public function show(Testimonial $testimonial)
     {
-        return view('admin.testimonials.show', compact('id'));
+        return view('admin.testimonials.show', compact('testimonial'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id): View
+    public function edit(Testimonial $testimonial)
     {
-        return view('admin.testimonials.edit', compact('id'));
+        return view('admin.testimonials.edit', compact('testimonial'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(Request $request, Testimonial $testimonial)
     {
-        // Logic to update testimonial
-        return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial updated successfully.');
+        $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'testimonial_text' => 'required|string',
+            'rating' => 'nullable|integer|min:1|max:5',
+            'status' => 'boolean',
+        ]);
+
+        $testimonial->update([
+            'customer_name' => $request->customer_name,
+            'testimonial_text' => $request->testimonial_text,
+            'rating' => $request->rating,
+            'status' => $request->has('status'),
+        ]);
+
+        return redirect()->route('testimonials.index')->with('success', 'Testimonial updated.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Testimonial $testimonial)
     {
-        // Logic to delete testimonial
-        return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial deleted successfully.');
+        $testimonial->delete();
+        return redirect()->route('testimonials.index')->with('success', 'Testimonial deleted.');
     }
 }

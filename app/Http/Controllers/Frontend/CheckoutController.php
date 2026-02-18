@@ -51,7 +51,7 @@ class CheckoutController extends Controller
 
         $order = Order::create([
             'user_id' => auth()->id(),
-            'order_code' => 'WR-' . strtoupper(Str::random(8)),
+            'order_code' => 'CDC-' . date('Y') . '-' . str_pad(Order::max('id') + 1, 6, '0', STR_PAD_LEFT),
             'customer_name' => $request->customer_name,
             'customer_email' => $request->customer_email,
             'customer_phone' => $request->customer_phone,

@@ -2,7 +2,7 @@
     <!-- Hero Banner -->
     <div class="relative bg-gray-900 overflow-hidden">
         <div class="absolute inset-0">
-            <img src="https://via.placeholder.com/1920x600/000000/000000?text=+" alt="About Wok Republic" class="w-full h-full object-cover">
+            <img src="https://via.placeholder.com/1920x600/000000/000000?text=+" alt="About Chinese Dragon Cafe" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/80 to-gray-900/40"></div>
         </div>
         <div class="relative max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8 text-center">
@@ -21,7 +21,7 @@
                 <div class="lg:w-1/2">
                     <h2 class="text-3xl font-extrabold text-white font-serif mb-6">From Humble Beginnings</h2>
                     <div class="space-y-4 text-gray-300 leading-relaxed">
-                        <p>Wok Republic was born in 2015 from a simple dream: to bring the authentic, vibrant flavors of Asian street food to the heart of New York City. Our founder, Chef Li Wei, grew up in the bustling food markets of Taipei and trained in kitchens across Southeast Asia.</p>
+                        <p>Chinese Dragon Cafe was born in 2015 from a simple dream: to bring the authentic, vibrant flavors of Asian street food to the heart of New York City. Our founder, Chef Li Wei, grew up in the bustling food markets of Taipei and trained in kitchens across Southeast Asia.</p>
                         <p>What started as a small family kitchen has grown into a beloved neighborhood institution. Every dish on our menu tells a story - from the spicy Sichuan noodles that remind Chef Li of her grandmother's kitchen, to our signature wok-fired dishes that capture the essence of Asian culinary tradition.</p>
                         <p>Today, we continue to honor those traditions while embracing innovation. Every ingredient is carefully sourced, every recipe perfected through years of dedication, and every meal prepared with the love and passion that defines our kitchen.</p>
                     </div>
